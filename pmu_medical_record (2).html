@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PMU Medical Record</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f7f6f3;
+  --surface:  #ffffff;
+  --border:   #e8e6e1;
+  --border2:  #d4d0c8;
+  --ink:      #1c1c1a;
+  --ink2:     #6b6860;
+  --ink3:     #a8a49c;
+  --green:    #2d5a3d;
+  --green2:   #4a7c5f;
+  --green-bg: #eef4f0;
+  --green-lt: #f4f8f5;
+  --amber:    #c17f3a;
+  --amber-bg: #fdf6ee;
+  --radius:   12px;
+  --radius-sm:8px;
+  --shadow:   0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  background: var(--bg); color: var(--ink);
+  min-height: 100vh; font-size: 14px; line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* LOADING */
+#loadingScreen {
+  position: fixed; inset: 0; background: var(--green);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 999; gap: 6px;
+}
+.load-logo { font-family: 'DM Serif Display', serif; font-size: 22px; color: #fff; letter-spacing: 0.06em; }
+.load-sub { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 0.24em; text-transform: uppercase; margin-bottom: 24px; }
+.load-bar { width: 44px; height: 1px; background: rgba(255,255,255,0.2); border-radius: 1px; overflow: hidden; }
+.load-bar::after { content: ''; display: block; height: 100%; width: 40%; background: #fff; border-radius: 1px; animation: slide 1s ease-in-out infinite alternate; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+
+/* HEADER */
+.app-header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.app-logo { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--green); letter-spacing: 0.02em; line-height: 1.1; }
+.app-logo-sub { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--ink3); letter-spacing: 0.2em; text-transform: uppercase; margin-top: 2px; }
+.header-user { display: flex; align-items: center; gap: 8px; }
+.header-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border2); }
+.header-name { font-size: 12px; color: var(--ink2); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* TABS */
+.tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: 1; min-width: 72px; padding: 13px 4px 12px; text-align: center; font-size: 11px; color: var(--ink3); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.18s, border-color 0.18s; white-space: nowrap; font-weight: 500; letter-spacing: 0.04em; }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* SCREENS */
+.screen { display: none; padding: 20px 16px 100px; }
+.screen.active { display: block; }
+
+/* PAGE HEADER */
+.page-header { margin-bottom: 20px; }
+.page-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); letter-spacing: 0.01em; line-height: 1.2; margin-bottom: 3px; }
+.page-subtitle { font-size: 12px; color: var(--ink3); }
+
+/* SECTION LABEL */
+.section-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink3); letter-spacing: 0.18em; text-transform: uppercase; margin: 20px 0 10px; }
+
+/* SEARCH */
+.search-wrap { position: relative; margin-bottom: 16px; }
+.search-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 14px; color: var(--ink); font-family: 'Zen Kaku Gothic New', sans-serif; outline: none; transition: border-color 0.18s; }
+.search-input:focus { border-color: var(--green2); }
+.search-input::placeholder { color: var(--ink3); }
+
+/* PATIENT CARDS */
+.patient-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.18s, box-shadow 0.18s; }
+.patient-card:hover { border-color: var(--green2); box-shadow: var(--shadow-md); }
+.patient-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--green-bg); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: var(--green); flex-shrink: 0; }
+.patient-info { flex: 1; min-width: 0; }
+.patient-name { font-size: 15px; font-weight: 500; }
+.patient-meta { font-size: 11px; color: var(--ink3); margin-top: 1px; }
+.patient-arrow { color: var(--ink3); font-size: 18px; font-weight: 300; }
+
+/* EMPTY */
+.empty-state { text-align: center; padding: 52px 20px; color: var(--ink3); }
+.empty-line { width: 32px; height: 1px; background: var(--border2); margin: 0 auto 12px; }
+.empty-text { font-size: 13px; }
+
+/* KARTE */
+.karte-patient-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.karte-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--green-bg); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: var(--green); flex-shrink: 0; }
+.karte-name { font-size: 16px; font-weight: 500; }
+.karte-sub { font-size: 11px; color: var(--ink3); margin-top: 1px; }
+
+/* RECORD CARDS */
+.record-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 8px; position: relative; overflow: hidden; }
+.record-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--green); }
+.record-card.lip::before    { background: #9b6b6b; }
+.record-card.eyeliner::before { background: #5a7080; }
+.record-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink3); margin-bottom: 6px; letter-spacing: 0.04em; }
+.record-site { font-size: 15px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.site-chip { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; background: var(--green-bg); color: var(--green); letter-spacing: 0.04em; }
+.site-chip.lip      { background: #f5eded; color: #7a4a4a; }
+.site-chip.eyeliner { background: #edf1f5; color: #3a5060; }
+.record-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.record-field-label { font-size: 10px; color: var(--ink3); margin-bottom: 2px; letter-spacing: 0.03em; }
+.record-field-value { font-size: 13px; font-weight: 500; color: var(--ink); }
+.removal-note { margin-top: 10px; padding: 10px 12px; background: var(--amber-bg); border-radius: var(--radius-sm); border-left: 3px solid var(--amber); font-size: 12px; color: var(--amber); }
+
+/* DETAIL EXPAND */
+.record-detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.record-detail.open { display: block; }
+.pigment-block { background: var(--green-lt); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
+.pigment-block-title { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--green2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+.pigment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.detail-full { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
+.record-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+.btn-text { font-size: 12px; color: var(--green2); background: none; border: none; cursor: pointer; padding: 4px 0; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 500; }
+.btn-text:hover { color: var(--green); }
+.btn-outline-sm { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border2); background: transparent; color: var(--ink2); font-size: 12px; cursor: pointer; font-family: 'Zen Kaku Gothic New', sans-serif; transition: all 0.18s; }
+.btn-outline-sm:hover { border-color: var(--green2); color: var(--green); }
+
+/* BUTTONS */
+.btn-primary { width: 100%; padding: 14px; background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 12px; letter-spacing: 0.04em; font-family: 'Zen Kaku Gothic New', sans-serif; transition: background 0.18s; }
+.btn-primary:hover { background: var(--green2); }
+.btn-primary:disabled { background: var(--ink3); cursor: not-allowed; }
+.btn-secondary { width: 100%; padding: 13px; background: transparent; color: var(--green); border: 1.5px solid var(--green); border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px; letter-spacing: 0.04em; font-family: 'Zen Kaku Gothic New', sans-serif; transition: background 0.18s; }
+.btn-secondary:hover { background: var(--green-bg); }
+
+/* FORM */
+.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
+.form-card-title { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink3); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.form-group { margin-bottom: 12px; }
+.form-label { display: block; font-size: 11px; color: var(--ink2); margin-bottom: 5px; font-weight: 500; letter-spacing: 0.03em; }
+.form-input, .form-textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Zen Kaku Gothic New', sans-serif; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.18s, background 0.18s; }
+.form-input:focus, .form-textarea:focus { border-color: var(--green2); background: var(--surface); }
+.form-input::placeholder, .form-textarea::placeholder { color: var(--ink3); }
+.form-textarea { resize: vertical; min-height: 76px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* PATIENT SEARCH */
+.patient-search-wrap { position: relative; }
+.patient-search-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Zen Kaku Gothic New', sans-serif; color: var(--ink); background: var(--bg); outline: none; transition: border-color 0.18s; }
+.patient-search-input:focus { border-color: var(--green2); background: var(--surface); }
+.patient-search-input::placeholder { color: var(--ink3); }
+.patient-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1.5px solid var(--green2); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); z-index: 50; max-height: 200px; overflow-y: auto; }
+.patient-dropdown.open { display: block; }
+.patient-option { padding: 10px 14px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+.patient-option:last-child { border-bottom: none; }
+.patient-option:hover { background: var(--green-lt); }
+.patient-option-sub { font-size: 11px; color: var(--ink3); }
+.selected-badge { display: none; align-items: center; gap: 8px; background: var(--green-bg); border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 6px; }
+.selected-badge.show { display: flex; }
+.selected-badge-name { font-size: 14px; font-weight: 500; color: var(--green); flex: 1; }
+.clear-btn { background: none; border: none; color: var(--ink3); cursor: pointer; font-size: 16px; padding: 0; }
+
+/* SITE SELECTOR */
+.site-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+.site-btn { padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: transparent; font-size: 12px; cursor: pointer; font-family: 'Zen Kaku Gothic New', sans-serif; color: var(--ink2); transition: all 0.15s; font-weight: 500; }
+.site-btn.selected { background: var(--green); border-color: var(--green); color: #fff; }
+.site-btn[data-site="lip"].selected    { background: #9b6b6b; border-color: #9b6b6b; }
+.site-btn[data-site="eyeliner"].selected { background: #5a7080; border-color: #5a7080; }
+
+/* PIGMENT */
+.pigment-entries { margin-bottom: 8px; }
+.pigment-entry { background: var(--green-lt); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; }
+.pigment-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.pigment-entry-title { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--green2); letter-spacing: 0.12em; text-transform: uppercase; }
+.remove-pigment-btn { background: none; border: none; color: var(--ink3); cursor: pointer; font-size: 18px; padding: 0; line-height: 1; }
+.remove-pigment-btn:hover { color: #8b3a2a; }
+.btn-add-pigment { width: 100%; padding: 10px; border: 1.5px dashed var(--border2); border-radius: var(--radius-sm); background: transparent; color: var(--ink2); font-size: 13px; cursor: pointer; font-family: 'Zen Kaku Gothic New', sans-serif; transition: all 0.15s; margin-top: 2px; }
+.btn-add-pigment:hover { border-color: var(--green2); color: var(--green); background: var(--green-lt); }
+
+/* SHARE */
+.share-url-card { background: var(--green-lt); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
+.share-url-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--green2); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; }
+.share-url-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--green); word-break: break-all; line-height: 1.6; }
+.share-desc { font-size: 12px; color: var(--ink3); margin-top: 6px; }
+
+/* PATIENT VIEW */
+#patientViewScreen { display: none; padding-bottom: 40px; }
+#patientViewScreen.active { display: block; }
+.pv-header { background: var(--green); padding: 40px 20px 24px; text-align: center; color: #fff; }
+.pv-avatar { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.15); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
+.pv-name { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 3px; }
+.pv-sub { font-size: 10px; opacity: 0.55; letter-spacing: 0.16em; text-transform: uppercase; }
+.pv-content { padding: 16px; }
+.pv-record { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 8px; position: relative; overflow: hidden; }
+.pv-record::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--green); }
+.pv-record.lip::before    { background: #9b6b6b; }
+.pv-record.eyeliner::before { background: #5a7080; }
+.pv-record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.pv-site { font-size: 15px; font-weight: 500; }
+.pv-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink3); }
+.pv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pv-item { background: var(--bg); border-radius: var(--radius-sm); padding: 9px 11px; }
+.pv-item-label { font-size: 10px; color: var(--ink3); margin-bottom: 2px; letter-spacing: 0.03em; }
+.pv-item-value { font-size: 13px; font-weight: 500; }
+.pv-detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pv-detail.open { display: block; }
+.pv-toggle-btn { width: 100%; padding: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; color: var(--ink2); cursor: pointer; margin-top: 10px; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 500; transition: all 0.15s; }
+.pv-toggle-btn:hover { border-color: var(--green2); color: var(--green); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.38); z-index: 200; align-items: flex-end; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-height: 88vh; overflow-y: auto; animation: slideUp 0.26s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 30px; height: 3px; background: var(--border2); border-radius: 2px; margin: -10px auto 20px; }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 16px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; z-index: 300; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; box-shadow: var(--shadow-md); }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     ★ ここを書き換えてください（3箇所）
+     ======================================================== -->
+<script>
+  var LIFF_ID      = "あなたのLIFF_IDをここに貼り付け";
+  var SUPABASE_URL = "あなたのSUPABASE_URLをここに貼り付け";
+  var SUPABASE_KEY = "あなたのSUPABASE_ANON_KEYをここに貼り付け";
+</script>
+<!-- ======================================================== -->
+
+<div id="loadingScreen">
+  <div class="load-logo">PMU Medical Record</div>
+  <div class="load-sub">Permanent Makeup Karte</div>
+  <div class="load-bar"></div>
+</div>
+
+<div class="app-header" id="appHeader" style="display:none;">
+  <div>
+    <div class="app-logo">PMU Medical Record</div>
+    <div class="app-logo-sub">Permanent Makeup Karte</div>
+  </div>
+  <div class="header-user">
+    <img class="header-avatar" id="userAvatar" src="" alt="">
+    <span class="header-name" id="userName"></span>
+  </div>
+</div>
+
+<div class="tabs" id="mainTabs" style="display:none;">
+  <div class="tab active" onclick="showTab('patients')" data-tab="patients">患者一覧</div>
+  <div class="tab" onclick="showTab('karte')" data-tab="karte">カルテ</div>
+  <div class="tab" onclick="showTab('newRecord')" data-tab="newRecord">記録追加</div>
+  <div class="tab" onclick="showTab('share')" data-tab="share">共有</div>
+</div>
+
+<!-- 患者一覧 -->
+<div class="screen active" id="screen-patients">
+  <div class="page-header">
+    <div class="page-title">患者一覧</div>
+    <div class="page-subtitle">タップしてカルテを確認</div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" placeholder="名前で検索..." oninput="filterPatients(this.value)">
+  </div>
+  <div id="patientList">
+    <div class="empty-state"><div class="empty-line"></div><div class="empty-text">患者を登録してください</div></div>
+  </div>
+  <button class="btn-primary" onclick="showModal('newPatient')">＋ 新規患者を登録</button>
+</div>
+
+<!-- カルテ -->
+<div class="screen" id="screen-karte">
+  <div class="karte-patient-bar">
+    <div class="karte-avatar" id="karteAvatar">？</div>
+    <div>
+      <div class="karte-name" id="kartePatientName">—</div>
+      <div class="karte-sub" id="kartePatientSub">—</div>
+    </div>
+  </div>
+  <div class="section-label">施術記録</div>
+  <div id="recordList">
+    <div class="empty-state"><div class="empty-line"></div><div class="empty-text">まだ記録がありません</div></div>
+  </div>
+  <button class="btn-primary" onclick="showTab('newRecord')">＋ 施術記録を追加</button>
+</div>
+
+<!-- 記録追加 -->
+<div class="screen" id="screen-newRecord">
+  <div class="page-header">
+    <div class="page-title">施術記録を追加</div>
+    <div class="page-subtitle">新しい施術内容を登録します</div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">患者</div>
+    <div class="form-group">
+      <label class="form-label">患者名を検索 *</label>
+      <div class="patient-search-wrap">
+        <input class="patient-search-input" type="text" id="patientSearchInput" placeholder="名前を入力して検索..." oninput="searchPatientInput(this.value)" autocomplete="off">
+        <div class="patient-dropdown" id="patientDropdown"></div>
+      </div>
+      <div class="selected-badge" id="selectedPatientBadge">
+        <span class="selected-badge-name" id="selectedPatientName"></span>
+        <button class="clear-btn" onclick="clearSelectedPatient()">×</button>
+      </div>
+      <input type="hidden" id="recordPatientId">
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">施術部位</div>
+    <div class="site-selector">
+      <button class="site-btn selected" data-site="eyebrow" onclick="selectSite(this)">眉毛</button>
+      <button class="site-btn" data-site="lip" onclick="selectSite(this)">リップ</button>
+      <button class="site-btn" data-site="eyeliner" onclick="selectSite(this)">アイライン</button>
+      <button class="site-btn" data-site="other" onclick="selectSite(this)">その他</button>
+    </div>
+    <input class="form-input" type="text" id="siteOtherInput" placeholder="部位を入力" style="margin-top:10px;display:none;">
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">色素情報</div>
+    <div class="pigment-entries" id="pigmentEntries"></div>
+    <button class="btn-add-pigment" onclick="addPigmentEntry()">＋ 色素を追加</button>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">施術内容</div>
+    <div class="form-group">
+      <label class="form-label">施術日 *</label>
+      <input class="form-input" type="date" id="treatmentDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label">施術手法</label>
+      <input class="form-input" type="text" id="treatmentMethod" placeholder="例: 毛並みストローク、マシン、手彫り...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">針・ニードル種類</label>
+      <input class="form-input" type="text" id="needleType" placeholder="例: 1R, 3R, U型...">
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title">除去・メモ</div>
+    <div class="form-group">
+      <label class="form-label">除去に関する注記</label>
+      <textarea class="form-textarea" id="removalNote" placeholder="除去検討中の場合や注意事項..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">施術者メモ</label>
+      <textarea class="form-textarea" id="practitionerMemo" placeholder="肌質・反応・特記事項など..."></textarea>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="saveRecordBtn" onclick="saveRecord()">記録を保存</button>
+</div>
+
+<!-- 共有 -->
+<div class="screen" id="screen-share">
+  <div class="page-header">
+    <div class="page-title">患者に共有</div>
+    <div class="page-subtitle">患者さんが記録を確認できるURLを発行します</div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-title">患者を選択</div>
+    <div class="patient-search-wrap">
+      <input class="patient-search-input" type="text" id="shareSearchInput" placeholder="名前を入力して検索..." oninput="searchSharePatient(this.value)" autocomplete="off">
+      <div class="patient-dropdown" id="shareDropdown"></div>
+    </div>
+    <div class="selected-badge" id="selectedShareBadge">
+      <span class="selected-badge-name" id="selectedShareName"></span>
+      <button class="clear-btn" onclick="clearSharePatient()">×</button>
+    </div>
+    <input type="hidden" id="sharePatientId">
+  </div>
+  <div class="share-url-card" id="shareCard" style="display:none;">
+    <div class="share-url-label">共有URL</div>
+    <div class="share-url-text" id="shareUrl">—</div>
+    <div class="share-desc" id="shareDesc"></div>
+  </div>
+  <button class="btn-primary"   id="copyUrlBtn"   style="display:none;" onclick="copyShareUrl()">URLをコピー</button>
+  <button class="btn-secondary" id="lineShareBtn"  style="display:none;" onclick="shareViaLine()">LINEで送る</button>
+</div>
+
+<!-- 患者ビュー -->
+<div id="patientViewScreen">
+  <div class="pv-header">
+    <div class="pv-avatar" id="pvAvatar">？</div>
+    <div class="pv-name" id="pvName">—</div>
+    <div class="pv-sub">Artmake Record</div>
+  </div>
+  <div class="pv-content" id="pvRecordList"></div>
+</div>
+
+<!-- モーダル: 記録修正 -->
+<div class="modal-overlay" id="modal-editRecord" onclick="closeModal('editRecord')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">施術記録を修正</div>
+    <input type="hidden" id="editRecordId">
+    <div class="form-group"><label class="form-label">施術日</label><input class="form-input" type="date" id="editDate"></div>
+    <div class="form-group"><label class="form-label">色素メーカー（1色目）</label><input class="form-input" type="text" id="editMaker" placeholder="例: Li Pigments"></div>
+    <div class="form-group"><label class="form-label">品番・カラー名</label><input class="form-input" type="text" id="editCode" placeholder="例: Brunette 03"></div>
+    <div class="form-group"><label class="form-label">施術手法</label><input class="form-input" type="text" id="editMethod"></div>
+    <div class="form-group"><label class="form-label">除去メモ</label><textarea class="form-textarea" id="editRemoval"></textarea></div>
+    <div class="form-group"><label class="form-label">施術者メモ</label><textarea class="form-textarea" id="editMemo"></textarea></div>
+    <button class="btn-primary" onclick="updateRecord()">更新する</button>
+    <button class="btn-secondary" onclick="closeModal('editRecord')">キャンセル</button>
+  </div>
+</div>
+
+<!-- モーダル: 新規患者 -->
+<div class="modal-overlay" id="modal-newPatient" onclick="closeModal('newPatient')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">新規患者を登録</div>
+    <div class="form-group"><label class="form-label">氏名 *</label><input class="form-input" type="text" id="newPatientName" placeholder="例: 田中 美咲"></div>
+    <div class="form-group"><label class="form-label">ふりがな</label><input class="form-input" type="text" id="newPatientKana" placeholder="例: たなか みさき"></div>
+    <div class="form-group"><label class="form-label">生年月日</label><input class="form-input" type="date" id="newPatientBirth"></div>
+    <div class="form-group"><label class="form-label">特記事項（アレルギー等）</label><textarea class="form-textarea" id="newPatientNotes" placeholder="アレルギー歴・皮膚疾患・注意事項など"></textarea></div>
+    <button class="btn-primary" id="savePatientBtn" onclick="savePatient()">登録する</button>
+    <button class="btn-secondary" onclick="closeModal('newPatient')">キャンセル</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var sb, currentUser, practitionerId, patients=[], currentPatientId, selectedSite='eyebrow', pigmentCount=0;
+
+async function init() {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var token = new URLSearchParams(location.search).get('token');
+  if (token) {
+    document.getElementById('appHeader').style.display='none';
+    document.getElementById('mainTabs').style.display='none';
+    document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';});
+    await loadPatientView(token); return;
+  }
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+    var profile = await liff.getProfile();
+    currentUser = profile;
+    document.getElementById('userName').textContent = profile.displayName;
+    document.getElementById('userAvatar').src = profile.pictureUrl||'';
+    await ensurePractitioner(profile.userId, profile.displayName);
+    await loadPatients();
+  } catch(e) {
+    console.warn('LIFF:', e);
+    practitionerId = 'dev-mode';
+    showToast('開発モードで起動中');
+  }
+  showUI(); addPigmentEntry();
+}
+
+function showUI() {
+  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('appHeader').style.display='flex';
+  document.getElementById('mainTabs').style.display='flex';
+}
+
+async function ensurePractitioner(lineId, name) {
+  var {data} = await sb.from('practitioners').select('id').eq('line_user_id',lineId).single();
+  if (data) { practitionerId=data.id; return; }
+  var {data:np} = await sb.from('practitioners').insert({line_user_id:lineId,name:name}).select('id').single();
+  if (np) practitionerId=np.id;
+}
+
+async function loadPatients() {
+  if (!practitionerId||practitionerId==='dev-mode') return;
+  var {data} = await sb.from('patients').select('*').eq('practitioner_id',practitionerId).order('created_at',{ascending:false});
+  patients=data||[]; renderPatientList(patients);
+}
+
+function renderPatientList(list) {
+  var el=document.getElementById('patientList');
+  if (!list.length) { el.innerHTML='<div class="empty-state"><div class="empty-line"></div><div class="empty-text">患者を登録してください</div></div>'; return; }
+  el.innerHTML=list.map(function(p){
+    return '<div class="patient-card" onclick="openKarte(\''+p.id+'\')"><div class="patient-avatar">'+p.name.charAt(0)+'</div>'
+      +'<div class="patient-info"><div class="patient-name">'+p.name+'</div>'
+      +'<div class="patient-meta">'+(p.name_kana||'')+'</div></div>'
+      +'<span class="patient-arrow">›</span></div>';
+  }).join('');
+}
+
+function filterPatients(v) { renderPatientList(patients.filter(function(p){return p.name.includes(v)||(p.name_kana||'').includes(v);})); }
+
+function searchPatientInput(v) {
+  var dd=document.getElementById('patientDropdown');
+  if (!v) { dd.classList.remove('open'); return; }
+  var f=patients.filter(function(p){return p.name.includes(v)||(p.name_kana||'').includes(v);});
+  dd.innerHTML=f.length ? f.map(function(p){
+    return '<div class="patient-option" onclick="selectPatientForRecord(\''+p.id+'\',\''+p.name+'\')">'+p.name+(p.name_kana?'<div class="patient-option-sub">'+p.name_kana+'</div>':'')+'</div>';
+  }).join('') : '<div class="patient-option" style="color:var(--ink3);">見つかりませんでした</div>';
+  dd.classList.add('open');
+}
+function selectPatientForRecord(id,name) {
+  document.getElementById('recordPatientId').value=id;
+  document.getElementById('patientSearchInput').value='';
+  document.getElementById('patientDropdown').classList.remove('open');
+  document.getElementById('selectedPatientName').textContent=name;
+  document.getElementById('selectedPatientBadge').classList.add('show');
+}
+function clearSelectedPatient() {
+  document.getElementById('recordPatientId').value='';
+  document.getElementById('patientSearchInput').value='';
+  document.getElementById('selectedPatientBadge').classList.remove('show');
+}
+
+function searchSharePatient(v) {
+  var dd=document.getElementById('shareDropdown');
+  if (!v) { dd.classList.remove('open'); return; }
+  var f=patients.filter(function(p){return p.name.includes(v)||(p.name_kana||'').includes(v);});
+  dd.innerHTML=f.length ? f.map(function(p){
+    return '<div class="patient-option" onclick="selectSharePatient(\''+p.id+'\',\''+p.name+'\')">'+p.name+'</div>';
+  }).join('') : '<div class="patient-option" style="color:var(--ink3);">見つかりませんでした</div>';
+  dd.classList.add('open');
+}
+function selectSharePatient(id,name) {
+  document.getElementById('sharePatientId').value=id;
+  document.getElementById('shareSearchInput').value='';
+  document.getElementById('shareDropdown').classList.remove('open');
+  document.getElementById('selectedShareName').textContent=name;
+  document.getElementById('selectedShareBadge').classList.add('show');
+  var p=patients.find(function(x){return x.id===id;});
+  if (!p) return;
+  var url=location.origin+location.pathname+'?token='+p.share_token;
+  document.getElementById('shareUrl').textContent=url;
+  document.getElementById('shareDesc').textContent=p.name+' さんの記録閲覧URL';
+  document.getElementById('shareCard').style.display='block';
+  document.getElementById('copyUrlBtn').style.display='block';
+  document.getElementById('lineShareBtn').style.display='block';
+}
+function clearSharePatient() {
+  document.getElementById('sharePatientId').value='';
+  document.getElementById('shareSearchInput').value='';
+  document.getElementById('selectedShareBadge').classList.remove('show');
+  document.getElementById('shareCard').style.display='none';
+  document.getElementById('copyUrlBtn').style.display='none';
+  document.getElementById('lineShareBtn').style.display='none';
+}
+
+async function savePatient() {
+  var name=document.getElementById('newPatientName').value.trim();
+  if (!name) { showToast('氏名を入力してください'); return; }
+  var btn=document.getElementById('savePatientBtn');
+  btn.disabled=true; btn.textContent='登録中...';
+  var {error}=await sb.from('patients').insert({
+    practitioner_id:practitionerId, name:name,
+    name_kana:document.getElementById('newPatientKana').value,
+    birth_date:document.getElementById('newPatientBirth').value||null,
+    notes:document.getElementById('newPatientNotes').value,
+  });
+  btn.disabled=false; btn.textContent='登録する';
+  if (error) { showToast('エラーが発生しました'); return; }
+  closeModal('newPatient'); showToast('患者を登録しました');
+  ['newPatientName','newPatientKana','newPatientBirth','newPatientNotes'].forEach(function(id){document.getElementById(id).value='';});
+  await loadPatients();
+}
+
+async function openKarte(pid) {
+  currentPatientId=pid;
+  var p=patients.find(function(x){return x.id===pid;});
+  if (!p) return;
+  document.getElementById('karteAvatar').textContent=p.name.charAt(0);
+  document.getElementById('kartePatientName').textContent=p.name;
+  document.getElementById('kartePatientSub').textContent=p.name_kana||'';
+  await loadRecords(pid); showTab('karte');
+}
+
+async function loadRecords(pid) {
+  var {data}=await sb.from('records').select('*').eq('patient_id',pid).order('treatment_date',{ascending:false});
+  renderRecords(data||[]);
+}
+
+function renderRecords(list) {
+  var el=document.getElementById('recordList');
+  if (!list.length) { el.innerHTML='<div class="empty-state"><div class="empty-line"></div><div class="empty-text">まだ記録がありません</div></div>'; return; }
+  el.innerHTML=list.map(function(r){
+    var pigments=[];
+    try{pigments=JSON.parse(r.pigment_maker||'[]');}catch(e){if(r.pigment_maker)pigments=[{maker:r.pigment_maker,code:r.pigment_code,lot:''}];}
+    var fp=pigments[0]||{};
+    var did='detail-'+r.id;
+    return '<div class="record-card '+r.site+'">'
+      +'<div class="record-date">'+r.treatment_date+'</div>'
+      +'<div class="record-site">'+siteLabel(r.site)+'<span class="site-chip '+r.site+'">'+r.site+'</span></div>'
+      +'<div class="record-grid">'
+      +'<div><div class="record-field-label">色素メーカー</div><div class="record-field-value">'+(fp.maker||'—')+'</div></div>'
+      +'<div><div class="record-field-label">品番</div><div class="record-field-value">'+(fp.code||'—')+'</div></div>'
+      +'<div><div class="record-field-label">手法</div><div class="record-field-value">'+(r.method||'—')+'</div></div>'
+      +'<div><div class="record-field-label">ニードル</div><div class="record-field-value">'+(r.needle||'—')+'</div></div>'
+      +'</div>'
+      +(r.removal_note?'<div class="removal-note">注記：'+r.removal_note+'</div>':'')
+      +'<div class="record-detail" id="'+did+'">'
+      +pigments.map(function(pg,i){return '<div class="pigment-block"><div class="pigment-block-title">色素 '+(i+1)+'</div>'
+        +'<div class="pigment-grid">'
+        +'<div><div class="record-field-label">メーカー</div><div class="record-field-value">'+(pg.maker||'—')+'</div></div>'
+        +'<div><div class="record-field-label">品番</div><div class="record-field-value">'+(pg.code||'—')+'</div></div>'
+        +(pg.lot?'<div style="grid-column:1/-1"><div class="record-field-label">ロット番号</div><div class="record-field-value">'+pg.lot+'</div></div>':'')
+        +'</div></div>';}).join('')
+      +(r.memo?'<div class="detail-full"><div class="record-field-label">施術者メモ</div><div style="font-size:13px;margin-top:3px;">'+r.memo+'</div></div>':'')
+      +'</div>'
+      +'<div class="record-actions">'
+      +'<button class="btn-text" onclick="toggleDetail(\''+did+'\',this)">詳細を見る ▼</button>'
+      +'<button class="btn-outline-sm" onclick="openEditRecord(\''+r.id+'\',\''+r.treatment_date+'\',\''+encodeURIComponent(fp.maker||'')+'\',\''+encodeURIComponent(fp.code||'')+'\',\''+encodeURIComponent(r.method||'')+'\',\''+encodeURIComponent(r.removal_note||'')+'\',\''+encodeURIComponent(r.memo||'')+'\')">修正</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function toggleDetail(id,btn) {
+  var el=document.getElementById(id);
+  if(el.classList.contains('open')){el.classList.remove('open');btn.textContent='詳細を見る ▼';}
+  else{el.classList.add('open');btn.textContent='閉じる ▲';}
+}
+
+function addPigmentEntry() {
+  pigmentCount++;
+  var n=pigmentCount;
+  var container=document.getElementById('pigmentEntries');
+  var div=document.createElement('div');
+  div.className='pigment-entry'; div.id='pigment-entry-'+n;
+  div.innerHTML='<div class="pigment-entry-header"><span class="pigment-entry-title">色素 '+n+'</span>'
+    +(n>1?'<button class="remove-pigment-btn" onclick="removePigmentEntry('+n+')">×</button>':'')+'</div>'
+    +'<div class="form-row" style="margin-bottom:8px;">'
+    +'<div><label class="form-label">色素メーカー *</label><input class="form-input" type="text" id="pMaker-'+n+'" placeholder="例: Li Pigments"></div>'
+    +'<div><label class="form-label">品番・カラー名 *</label><input class="form-input" type="text" id="pCode-'+n+'" placeholder="例: Brunette 03"></div>'
+    +'</div>'
+    +'<div><label class="form-label">ロット番号（任意）</label><input class="form-input" type="text" id="pLot-'+n+'" placeholder="例: LP240115"></div>';
+  container.appendChild(div);
+}
+function removePigmentEntry(n){var el=document.getElementById('pigment-entry-'+n);if(el)el.remove();}
+function collectPigments(){
+  var result=[];
+  document.querySelectorAll('.pigment-entry').forEach(function(entry){
+    var n=entry.id.replace('pigment-entry-','');
+    var maker=document.getElementById('pMaker-'+n);
+    var code=document.getElementById('pCode-'+n);
+    var lot=document.getElementById('pLot-'+n);
+    if(maker&&maker.value.trim()) result.push({maker:maker.value.trim(),code:code?code.value.trim():'',lot:lot?lot.value.trim():''});
+  });
+  return result;
+}
+
+async function saveRecord() {
+  var pid=document.getElementById('recordPatientId').value;
+  var date=document.getElementById('treatmentDate').value;
+  var pigments=collectPigments();
+  if (!pid){showToast('患者を選択してください');return;}
+  if (!pigments.length){showToast('色素情報を入力してください');return;}
+  if (!date){showToast('施術日を入力してください');return;}
+  var btn=document.getElementById('saveRecordBtn');
+  btn.disabled=true; btn.textContent='保存中...';
+  var site=selectedSite==='other'?(document.getElementById('siteOtherInput').value||'other'):selectedSite;
+  var {error}=await sb.from('records').insert({
+    patient_id:pid, site:site, treatment_date:date,
+    pigment_maker:JSON.stringify(pigments),
+    pigment_code:pigments[0]?pigments[0].code:'',
+    pigment_lot:pigments[0]?pigments[0].lot:'',
+    method:document.getElementById('treatmentMethod').value,
+    needle:document.getElementById('needleType').value,
+    removal_note:document.getElementById('removalNote').value,
+    memo:document.getElementById('practitionerMemo').value,
+  });
+  btn.disabled=false; btn.textContent='記録を保存';
+  if (error){showToast('エラーが発生しました');return;}
+  showToast('施術記録を保存しました');
+  currentPatientId=pid; await loadRecords(pid); showTab('karte');
+}
+
+function openEditRecord(id,date,maker,code,method,removal,memo){
+  document.getElementById('editRecordId').value=id;
+  document.getElementById('editDate').value=date||'';
+  document.getElementById('editMaker').value=decodeURIComponent(maker||'');
+  document.getElementById('editCode').value=decodeURIComponent(code||'');
+  document.getElementById('editMethod').value=decodeURIComponent(method||'');
+  document.getElementById('editRemoval').value=decodeURIComponent(removal||'');
+  document.getElementById('editMemo').value=decodeURIComponent(memo||'');
+  showModal('editRecord');
+}
+async function updateRecord(){
+  var id=document.getElementById('editRecordId').value;
+  var maker=document.getElementById('editMaker').value.trim();
+  var code=document.getElementById('editCode').value.trim();
+  var {error}=await sb.from('records').update({
+    treatment_date:document.getElementById('editDate').value,
+    pigment_maker:JSON.stringify(maker?[{maker:maker,code:code,lot:''}]:[]),
+    pigment_code:code,
+    method:document.getElementById('editMethod').value,
+    removal_note:document.getElementById('editRemoval').value,
+    memo:document.getElementById('editMemo').value,
+  }).eq('id',id);
+  if(error){showToast('更新に失敗しました');return;}
+  closeModal('editRecord'); showToast('記録を更新しました');
+  if(currentPatientId) await loadRecords(currentPatientId);
+}
+
+function copyShareUrl(){navigator.clipboard.writeText(document.getElementById('shareUrl').textContent).then(function(){showToast('URLをコピーしました');});}
+function shareViaLine(){
+  var url=document.getElementById('shareUrl').textContent;
+  var name=document.getElementById('selectedShareName').textContent;
+  var msg='【PMU Medical Record】'+name+'さんのアートメイク記録をご確認いただけます。\n'+url;
+  if(typeof liff!=='undefined'&&liff.isApiAvailable&&liff.isApiAvailable('shareTargetPicker')){liff.shareTargetPicker([{type:'text',text:msg}]);}
+  else{window.open('https://line.me/R/msg/text/?'+encodeURIComponent(msg));}
+}
+
+async function loadPatientView(token){
+  document.getElementById('loadingScreen').style.display='none';
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  var {data:p}=await sb.from('patients').select('*').eq('share_token',token).single();
+  if(!p){document.body.innerHTML='<div style="padding:40px;text-align:center;color:#888;">記録が見つかりませんでした</div>';return;}
+  if(p.share_expires_at&&new Date(p.share_expires_at)<new Date()){
+    document.body.innerHTML='<div style="padding:40px;text-align:center;color:#888;">このリンクの有効期限が切れています。<br>施術者にご連絡ください。</div>';return;
+  }
+  var {data:records}=await sb.from('records').select('*').eq('patient_id',p.id).order('treatment_date',{ascending:false});
+  document.getElementById('pvAvatar').textContent=p.name.charAt(0);
+  document.getElementById('pvName').textContent=p.name;
+  var el=document.getElementById('pvRecordList');
+  el.innerHTML=(records||[]).map(function(r,idx){
+    var pigments=[];
+    try{pigments=JSON.parse(r.pigment_maker||'[]');}catch(e){if(r.pigment_maker)pigments=[{maker:r.pigment_maker,code:r.pigment_code}];}
+    var fp=pigments[0]||{};
+    var did='pv-detail-'+idx;
+    return '<div class="pv-record '+r.site+'">'
+      +'<div class="pv-record-header"><div class="pv-site">'+siteLabel(r.site)+'</div><div class="pv-date">'+r.treatment_date+'</div></div>'
+      +'<div class="pv-grid">'
+      +'<div class="pv-item"><div class="pv-item-label">色素メーカー</div><div class="pv-item-value">'+(fp.maker||'—')+'</div></div>'
+      +'<div class="pv-item"><div class="pv-item-label">カラー</div><div class="pv-item-value">'+(fp.code||'—')+'</div></div>'
+      +'<div class="pv-item"><div class="pv-item-label">手法</div><div class="pv-item-value">'+(r.method||'—')+'</div></div>'
+      +'<div class="pv-item"><div class="pv-item-label">ニードル</div><div class="pv-item-value">'+(r.needle||'—')+'</div></div>'
+      +'</div>'
+      +'<div class="pv-detail" id="'+did+'">'
+      +(pigments.length>1?'<div style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--green2);letter-spacing:0.12em;text-transform:uppercase;margin:10px 0 6px;">追加色素</div>'
+        +pigments.slice(1).map(function(pg,i){return '<div class="pv-item" style="margin-bottom:6px;"><div class="pv-item-label">色素'+(i+2)+'</div><div class="pv-item-value">'+pg.maker+(pg.code?' / '+pg.code:'')+'</div></div>';}).join(''):'')
+      +(fp.lot?'<div class="pv-item" style="margin-top:8px;"><div class="pv-item-label">ロット番号</div><div class="pv-item-value">'+fp.lot+'</div></div>':'')
+      +(r.removal_note?'<div class="removal-note" style="margin-top:10px;">注記：'+r.removal_note+'</div>':'')
+      +'</div>'
+      +'<button class="pv-toggle-btn" onclick="togglePvDetail(\''+did+'\',this)">詳細を見る ▼</button>'
+      +'</div>';
+  }).join('')||'<div style="padding:30px;text-align:center;color:var(--ink3);">記録がありません</div>';
+  document.getElementById('patientViewScreen').classList.add('active');
+}
+
+function togglePvDetail(id,btn){
+  var el=document.getElementById(id);
+  if(el.classList.contains('open')){el.classList.remove('open');btn.textContent='詳細を見る ▼';}
+  else{el.classList.add('open');btn.textContent='閉じる ▲';}
+}
+
+function showTab(t){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(tb){tb.classList.remove('active');});
+  document.getElementById('screen-'+t).classList.add('active');
+  document.querySelector('[data-tab="'+t+'"]').classList.add('active');
+}
+function selectSite(btn){
+  document.querySelectorAll('.site-btn').forEach(function(b){b.classList.remove('selected');});
+  btn.classList.add('selected'); selectedSite=btn.dataset.site;
+  document.getElementById('siteOtherInput').style.display=selectedSite==='other'?'block':'none';
+}
+function showModal(n){document.getElementById('modal-'+n).classList.add('open');}
+function closeModal(n){document.getElementById('modal-'+n).classList.remove('open');}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2600);}
+function siteLabel(s){return{eyebrow:'眉毛（アイブロウ）',lip:'リップ',eyeliner:'アイライン',other:'その他'}[s]||s;}
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.patient-search-wrap')) document.querySelectorAll('.patient-dropdown').forEach(function(d){d.classList.remove('open');});
+});
+
+init();
+</script>
+</body>
+</html>
