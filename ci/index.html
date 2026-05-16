@@ -7,13 +7,6 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;700;900&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --sky:    #9DDCFF;
-  --periwinkle: #C1CFFC;
-  --lavender:   #FE87FD;
-  --blue:       #6576EA;
-  --white:      #ffffff;
-}
 body {
   min-height: 100vh;
   background:
@@ -26,8 +19,6 @@ body {
   color: #fff;
   overflow-x: hidden;
 }
-
-/* 浮かぶバブル */
 .bubble {
   position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
   background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.6), rgba(255,255,255,0.1));
@@ -39,26 +30,14 @@ body {
 .b3 { width: 150px; height: 150px; bottom: 10%; left: 10%; }
 .b4 { width: 100px; height: 100px; top: 60%; right: 20%; }
 
-.pmuink-btn {
-  position: fixed; top: 16px; right: 20px; z-index: 100;
-  display: flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(255,255,255,0.6);
-  color: #fff; font-size: 9px; letter-spacing: 2px;
-  padding: 8px 16px; border-radius: 20px; text-decoration: none;
-  font-family: 'Space Mono', monospace; font-weight: 700;
-  text-shadow: 0 1px 3px rgba(101,118,234,0.4);
-  text-transform: uppercase;
-}
-
 .wrap {
   position: relative; z-index: 1;
   display: flex; flex-direction: column; align-items: center;
   min-height: 100vh; padding: 60px 24px 48px;
 }
 
-.header { text-align: center; margin-bottom: 48px; }
+/* ヘッダー */
+.header { text-align: center; margin-bottom: 36px; }
 .header-sub {
   font-size: 9px; letter-spacing: 6px;
   color: rgba(255,255,255,0.8);
@@ -85,10 +64,15 @@ h1 em {
 
 /* 検索 */
 .search-wrap { width: 100%; max-width: 480px; margin-bottom: 40px; }
+.search-label {
+  text-align: center; font-size: 10px; letter-spacing: 3px;
+  color: rgba(255,255,255,0.7); margin-bottom: 12px;
+  font-family: 'Space Mono', monospace;
+}
 .input-row { position: relative; }
 .ci-prefix {
   position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
-  font-size: 14px; color: var(--blue); letter-spacing: 2px; font-weight: 700;
+  font-size: 14px; color: #6576EA; letter-spacing: 2px; font-weight: 700;
   pointer-events: none; font-family: 'Space Mono', monospace;
 }
 input {
@@ -110,7 +94,7 @@ input:focus {
 }
 .search-btn {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  background: linear-gradient(135deg, var(--lavender), var(--blue));
+  background: linear-gradient(135deg, #FE87FD, #6576EA);
   border: none; border-radius: 12px;
   color: #fff; width: 42px; height: 42px; cursor: pointer;
   font-size: 18px; font-weight: 700;
@@ -122,7 +106,7 @@ input:focus {
   background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.4);
   cursor: default; box-shadow: none;
 }
-.hint { text-align: center; margin-top: 8px; font-size: 9px; color: rgba(255,255,255,0.5); letter-spacing: 2px; font-family: 'Space Mono', monospace; }
+.hint { text-align: center; margin-top: 8px; font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 2px; font-family: 'Space Mono', monospace; }
 
 /* カード */
 .result-wrap { width: 100%; max-width: 600px; }
@@ -196,24 +180,30 @@ input:focus {
   font-family: 'Space Mono', monospace;
 }
 
-.empty { text-align: center; padding: 60px 20px; }
-.empty-text { font-size: 10px; letter-spacing: 3px; color: rgba(255,255,255,0.4); font-family: 'Space Mono', monospace; }
+.ai-badge { font-size: 8px; color: #7a7aaa; letter-spacing: 1px; padding: 3px 8px; background: rgba(193,207,252,0.3); border: 1px solid rgba(101,118,234,0.3); border-radius: 10px; }
 
+/* フッター */
 footer {
   margin-top: auto; padding-top: 56px; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
 }
-footer a {
-  display: inline-flex; align-items: center; gap: 6px;
-  color: #fff; font-size: 9px; letter-spacing: 3px; text-decoration: none;
-  background: rgba(255,255,255,0.2); backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(255,255,255,0.5); border-radius: 20px; padding: 8px 20px;
-  font-family: 'Space Mono', monospace; font-weight: 700;
+.credit {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 10px; color: rgba(255,255,255,0.7); letter-spacing: 2px;
+  font-family: 'Space Mono', monospace;
 }
-.credit { font-size: 10px; color: rgba(255,255,255,0.6); letter-spacing: 2px; line-height: 1.8; font-family: 'Space Mono', monospace; }
-.credit span { color: #fff; font-weight: 700; }
+.credit-name { color: #fff; font-weight: 700; }
+.ig-link {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px; text-decoration: none;
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  box-shadow: 0 2px 8px rgba(220,39,67,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+.ig-link:hover { transform: scale(1.1); box-shadow: 0 4px 16px rgba(220,39,67,0.5); }
+.ig-link svg { width: 18px; height: 18px; fill: #fff; }
 .ref { font-size: 8px; color: rgba(255,255,255,0.3); letter-spacing: 2px; font-family: 'Space Mono', monospace; }
-.ai-badge { font-size: 8px; color: #7a7aaa; letter-spacing: 1px; padding: 3px 8px; background: rgba(193,207,252,0.3); border: 1px solid rgba(101,118,234,0.3); border-radius: 10px; }
 </style>
 </head>
 <body>
@@ -221,32 +211,40 @@ footer a {
 <div class="bubble b2"></div>
 <div class="bubble b3"></div>
 <div class="bubble b4"></div>
-<a class="pmuink-btn" href="https://pmuink.jp/" target="_blank" rel="noopener noreferrer">&#9672; PMU INK SHOP</a>
+
 <div class="wrap">
   <div class="header">
     <div class="header-sub">Permanent Make Up</div>
     <h1>CI Pigment <em>Lookup</em></h1>
     <div class="header-count" id="count-label"></div>
   </div>
+
   <div class="search-wrap">
+    <div class="search-label">CIナンバーを入力してください</div>
     <div class="input-row">
       <div class="ci-prefix">CI</div>
       <input type="text" inputmode="numeric" pattern="[0-9]*" id="ci-input" placeholder="77491" autocomplete="off">
       <button class="search-btn" id="search-btn" disabled>&#8594;</button>
     </div>
-    <div class="hint">数字のみ入力 &nbsp;·&nbsp; Enterで検索</div>
+    <div class="hint">数字のみ &nbsp;·&nbsp; Enterで検索</div>
   </div>
+
   <div class="result-wrap" id="result-area"></div>
   <div class="result-wrap" id="legend-area"></div>
-  <div class="empty" id="empty-state">
-    <div class="empty-text">CIナンバーを入力してください</div>
-  </div>
+
   <footer>
-    <a href="https://pmuink.jp/" target="_blank" rel="noopener noreferrer">&#9672; PMU INK SHOP — pmuink.jp</a>
-    <div class="credit"><span>&reg; Natsumi Ono</span> &nbsp;·&nbsp; Paramedical Artmake Practitioner</div>
+    <div class="credit">
+      <span class="credit-name">&reg; Natsumi Ono</span>
+      <a class="ig-link" href="https://www.instagram.com/natsumi_ono_artmake/" target="_blank" rel="noopener noreferrer" title="@natsumi_ono_artmake">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+      </a>
+    </div>
     <div class="ref">EU REACH Annex XVII Entry 75 · Commission Regulation (EU) 2020/2081</div>
   </footer>
 </div>
+
 <script>
 const DB = {"CI 12490": {"name": "ピグメントレッド5 / Pigment Red 5", "color": "#CC1133", "colorName": "鮮やかな赤", "type": "有機", "eu_status": "check", "note": "合成アゾ染料。ECHA Annex XV検討文書でタトゥーインク使用顔料として言及。名指し禁止ではないがCLP分類次第でREACH Entry 75の対象になりうる。EU・英国・ブラジル・セルビアで規制への言及あり。サプライヤーのSDS/CLP分類を確認のこと。参照: ECHA Annex XV public consultation document"}, "CI 77497": {"name": "Iron Nickel Oxide / Pigment Brown 34", "color": "#7A4A1A", "colorName": "茶色（スピネル構造混合酸化物）", "type": "無機", "eu_status": "clear", "note": "Fe₂O₃とNiOの高温焼成スピネル結晶。Al₂O₃・SiO₂・SnO₂・TiO₂等の修飾剤を含む場合あり。EU化粧品規制Annex IVの無機混合酸化物系として規制対象外"}, "CI 15985": {"name": "サンセットイエロー / Sunset Yellow FCF / Yellow 6 / E110", "color": "#FFA500", "colorName": "鮮やかなオレンジ〜黄色", "type": "有機", "eu_status": "check", "note": "アゾ系合成染料（CAS 2783-94-0）。EU化粧品規制Annex IV収載（許可着色料）。食品添加物E110。REACH Entry 75上、Annex IVの使用条件（粘膜・眼周囲不可等）付き着色料はPMU/タトゥー用途で規制対象になりうる。EU・英国・ブラジル・USAで規制言及あり。米国FDAは眼周囲製品への使用前に認証を要求。参照: COSMILE Europe, Archives of Toxicology 2020"}, "CI 77491": {"name": "酸化鉄（赤）/ Pigment Red 101", "color": "#8B1A1A", "colorName": "くすんだ赤（ベンガラ）", "type": "無機", "eu_status": "clear", "note": "EU化粧品規制Annex IV収載（許可着色料）。タトゥー用途でも規制対象外"}, "CI 77492": {"name": "酸化鉄（黄）/ Pigment Yellow 42", "color": "#C8960C", "colorName": "くすんだ黄", "type": "無機", "eu_status": "clear", "note": "EU化粧品規制Annex IV収載（許可着色料）。規制対象外。皮膚内で経時酸化（Fe₃O₄→Fe₂O₃）し赤褐色（ベンガラ色）に変色しやすい"}, "CI 77499": {"name": "酸化鉄（黒）/ Pigment Black 11", "color": "#2C2C2C", "colorName": "黒（経時で赤褐色に変色しやすい）", "type": "無機", "eu_status": "clear", "note": "EU化粧品規制Annex IV収載（許可着色料）。規制対象外。皮膚内で経時酸化（Fe₃O₄→Fe₂O₃）し赤褐色（ベンガラ色）に変色しやすい"}, "CI 77489": {"name": "酸化鉄（橙）", "color": "#CC5500", "colorName": "くすんだオレンジ", "type": "無機", "eu_status": "clear", "note": "EU化粧品規制Annex IV収載。規制対象外"}, "CI 77891": {"name": "二酸化チタン", "color": "#FFFFFF", "colorName": "白", "type": "無機", "eu_status": "check", "note": "粉末形態のみCMR2B"}, "CI 77266": {"name": "カーボンブラック / Pigment Black 6・7", "color": "#0A0A0A", "colorName": "黒（青く変色しにくい）", "type": "無機", "eu_status": "check", "note": "顔料そのものは禁止されていないが、PAH（多環芳香族炭化水素）含有量がREACH基準（0.00005%）を超える場合は規制対象。サプライヤーのCoA（分析証明書）でPAH値を確認すること"}, "CI 77267": {"name": "植物性炭素（骨炭）/ Pigment Black 9", "color": "#1A1A1A", "colorName": "ボーンブラック", "type": "無機", "eu_status": "clear", "note": "天然由来カーボン。PAH含有量が基準内であれば規制対象外"}, "CI 77268": {"name": "植物性炭素 / Pigment Black 8", "color": "#111111", "colorName": "ベジタブルブラック", "type": "無機", "eu_status": "clear", "note": "天然由来カーボン。PAH含有量が基準内であれば規制対象外"}, "CI 77288": {"name": "酸化クロム（緑）/ Pigment Green 17", "color": "#4A7C59", "colorName": "マットな緑", "type": "無機", "eu_status": "check", "note": "EU化粧品規制Annex IVで眼周囲・粘膜への使用制限あり。USA FDAではリップへの使用禁止。PMUでの使用部位に注意"}, "CI 77289": {"name": "水酸化クロム（緑）/ Pigment Green 18", "color": "#5D8A6A", "colorName": "ビリジアン", "type": "無機", "eu_status": "clear", "note": "EU化粧品規制Annex IV収載。Cr(VI)不純物の濃度管理が必要"}, "CI 77007": {"name": "ウルトラマリン（青）", "color": "#4169E1", "colorName": "ウルトラマリンブルー", "type": "無機", "eu_status": "clear", "note": "EU化粧品規制Annex IV収載。規制対象外"}, "CI 77742": {"name": "マンガンバイオレット / Pigment Violet 16", "color": "#8B4789", "colorName": "マンガンバイオレット", "type": "無機", "eu_status": "clear", "note": "EU化粧品規制Annex IV収載。規制対象外"}, "CI 77510": {"name": "フェロシアン化鉄（プルシアンブルー）/ Pigment Blue 27", "color": "#003153", "colorName": "プルシアンブルー", "type": "無機", "eu_status": "check", "note": "シアン化物を含む。EU化粧品規制Annex IVで条件付き使用。タトゥー用途での安全性は要確認"}, "CI 77947": {"name": "酸化亜鉛 / Pigment White 4", "color": "#F8F8F8", "colorName": "透明感のある白", "type": "無機", "eu_status": "check", "note": "EU化粧品規制でナノ粒子形態に制限あり。タトゥー用途では安全性データ要確認"}, "CI 77163": {"name": "ビスマスオキシクロリド / Pigment White 14", "color": "#E8E8E8", "colorName": "パールホワイト", "type": "無機", "eu_status": "check", "note": "EU REACH SVHCの候補物質リストに関連するビスマス化合物あり。個別確認推奨"}, "CI 74160": {"name": "フタロシアニンブルー / Pigment Blue 15:3", "color": "#1034A6", "colorName": "純度の高い青", "type": "有機", "eu_status": "confirmed", "note": "EU REACH Annex XVII Entry 75で名指し規制（2023年1月5日施行）。Commission Regulation (EU) 2020/2081にCI 74160として明記"}, "CI 74260": {"name": "フタロシアニングリーン / Pigment Green 7", "color": "#1CAC78", "colorName": "高輝度の緑", "type": "有機", "eu_status": "confirmed", "note": "EU REACH Annex XVII Entry 75で名指し規制（2023年1月5日施行）。Commission Regulation (EU) 2020/2081にCI 74260として明記"}, "CI 74100": {"name": "フタロシアニンブルー（銅）/ Pigment Blue 15", "color": "#0047AB", "colorName": "フタロブルー（PB15:3とは別グレード）", "type": "有機", "eu_status": "check", "note": "PB15:3（CI 74160）は名指し規制済み。PB15（本品）はCLP分類次第で対象になりうる。サプライヤー確認推奨"}, "CI 21095": {"name": "ピグメントイエロー14（ベンジジンイエローG）", "color": "#C8C820", "colorName": "緑みのある黄色", "type": "有機", "eu_status": "check", "note": "ジスアゾ系（ジアリリド系）。ベンジジン類似構造を持ち、還元分解で発がん性アミン生成の可能性が指摘される。EU化粧品規制Annex IIの禁止アミンとの関連を個別確認のこと"}, "CI 21096": {"name": "ピグメントイエロー55", "color": "#EEE840", "colorName": "明度の高い黄色", "type": "有機", "eu_status": "check", "note": "ジアリリド系。CI 21095と同様、ベンジジン系アミンの分解生成リスクを個別確認のこと"}, "CI 21108": {"name": "ピグメントイエロー83（PY83）", "color": "#D4A030", "colorName": "赤みがかった鮮やかな黄色", "type": "有機", "eu_status": "check", "note": "ジスアゾ顔料（CAS 5567-15-7）。化粧品（洗い流しタイプ）には使用実績あり。PMUインクでのCLP分類を個別確認のこと"}, "CI 21110": {"name": "ピグメントオレンジ13（ベンジジンオレンジG）", "color": "#E85A00", "colorName": "透明感のある鮮やかなオレンジ", "type": "有機", "eu_status": "check", "note": "ジアリリドオレンジ（CAS 3520-72-7）。CI 21095と同系統。分解アミンのリスク要確認"}, "CI 21160": {"name": "ピグメントオレンジ16", "color": "#D44020", "colorName": "わずかに紫がかったオレンジ", "type": "有機", "eu_status": "check", "note": "ジアゾ系。CLP分類によりREACH Entry 75の対象になりうる。個別確認推奨"}, "CI 21290": {"name": "ピグメントイエロー180", "color": "#E89020", "colorName": "赤みオレンジ味の黄色", "type": "有機", "eu_status": "check", "note": "アゾ系。CLP分類によりREACH対象になりうる。個別確認推奨"}, "CI 11741": {"name": "ピグメントイエロー74", "color": "#F2E04A", "colorName": "鮮明な黄色（耐溶剤性・着色力優）", "type": "有機", "eu_status": "check", "note": "モノアゾ系。CLP分類確認推奨"}, "CI 11767": {"name": "ピグメントイエロー97", "color": "#F0D830", "colorName": "鮮明な黄色", "type": "有機", "eu_status": "check", "note": "モノアゾ系。CLP分類確認推奨"}, "CI 75300": {"name": "ピグメントイエロー3", "color": "#E8D840", "colorName": "ナチュラルな黄色", "type": "有機", "eu_status": "check", "note": "モノアゾ系。CLP分類確認推奨"}, "CI 12475": {"name": "ピグメントレッド170", "color": "#CC2222", "colorName": "黄色みのある赤（ナフトールAS系）", "type": "有機", "eu_status": "check", "note": "ナフトールAS系モノアゾ顔料。CLP分類を確認のこと"}, "CI 12477": {"name": "ピグメントレッド210", "color": "#CC3344", "colorName": "高発色・青みがかった赤", "type": "有機", "eu_status": "check", "note": "ナフトール系（CAS 61932-63-6）。PMUインク用途での使用実績あり。CLP分類確認推奨"}, "CI 12485": {"name": "ピグメントレッド146", "color": "#C41E3A", "colorName": "やや黄みがかった赤", "type": "有機", "eu_status": "check", "note": "ナフトールAS系。CLP分類確認推奨"}, "CI 12466": {"name": "ピグメントレッド269", "color": "#5C0A2A", "colorName": "強い青みのある赤", "type": "有機", "eu_status": "check", "note": "ナフトール系。CLP分類確認推奨"}, "CI 12474": {"name": "ピグメントレッド266", "color": "#6B0A14", "colorName": "深みのある赤", "type": "有機", "eu_status": "check", "note": "ナフトール系。CLP分類確認推奨"}, "CI 12315": {"name": "ピグメントレッド22（Brilliant Fast Scarlet）", "color": "#8B1020", "colorName": "暗めの赤", "type": "有機", "eu_status": "check", "note": "モノアゾ系。CLP分類確認推奨"}, "CI 15850": {"name": "ピグメントレッド57（リソールルビンBCA）", "color": "#C2185B", "colorName": "青みがかった鮮明な赤・透明感", "type": "有機", "eu_status": "confirmed", "note": "EU化粧品規制Annex IVで条件付き許可だが、タトゥー・PMU用途ではAnnex IVの条件（粘膜・眼周囲不可）に該当しREACH Entry 75の規制対象。広くPMU業界で使用禁止と認識されている"}, "CI 56110": {"name": "ピグメントレッド254（DPP顔料）", "color": "#E82020", "colorName": "非常に鮮明な黄みの赤", "type": "有機", "eu_status": "check", "note": "ジケトピロロピロール（DPP）系。高耐候性・高耐熱性顔料。CLP分類確認推奨"}, "CI 73360": {"name": "Pigment Red 181 / D&C Red No.30 / 赤色226号", "color": "#C8306A", "colorName": "深みのあるピンク〜赤（Lakeは淡いシェード）", "type": "有機", "eu_status": "check", "note": "チオインジゴイド系有機顔料（CAS 2379-74-0）。EU化粧品規制Annex IV収載（全化粧品に使用可、眼周囲は不可）。日本では赤色226号として許可。タトゥー・PMU用途での皮膚内注入はAnnex IVの想定外用途のためREACH Entry 75との関係を個別確認のこと"}, "CI 73915": {"name": "ピグメントレッド122（キナクリドンマゼンタ）", "color": "#E03060", "colorName": "鮮やかなマゼンタ（ピンク～赤）", "type": "有機", "eu_status": "check", "note": "キナクリドン系（CAS 980-26-7）。化粧品・PMU用途での使用実績あり。CLP分類確認推奨"}, "CI 56300": {"name": "ピグメントイエロー138（キノフタロン）", "color": "#D4C000", "colorName": "鮮明な黄色", "type": "有機", "eu_status": "check", "note": "キノフタロン系。CLP分類確認推奨"}, "CI 56130": {"name": "ピグメントレッド264", "color": "#C01030", "colorName": "鮮明な赤", "type": "有機", "eu_status": "check", "note": "DPP系。CLP分類確認推奨"}, "CI 71105": {"name": "ピグメントオレンジ43（バットオレンジ7）", "color": "#D45000", "colorName": "オレンジ", "type": "有機", "eu_status": "check", "note": "EU化粧品規制Annex IVで粘膜（唇・目）への使用制限あり。PMU部位に注意"}, "CI 200310": {"name": "ピグメントイエロー155（PY155）", "color": "#D4C820", "colorName": "高耐候性の黄色", "type": "有機", "eu_status": "check", "note": "ビスアセトアセトアリーリド系（CAS 68516-73-4）。工業用途主体。PMUインクでのCLP分類確認推奨"}, "CI 51319": {"name": "ピグメントバイオレット23", "color": "#4A1A6B", "colorName": "青みがかった紫", "type": "有機", "eu_status": "check", "note": "ジオキサジン系。CLP分類確認推奨"}, "CI 75470": {"name": "カルミン（コチニール）/ Natural Red 4", "color": "#960018", "colorName": "カーマイン", "type": "有機", "eu_status": "check", "note": "天然色素。EU化粧品規制Annex IVで条件付き許可。アレルギーリスク（コチニールアレルギー）あり。タトゥー用途でのリスク要確認"}};
 const EU_STATUS = {
@@ -271,7 +269,6 @@ const inp = document.getElementById('ci-input');
 const btn = document.getElementById('search-btn');
 const resultArea = document.getElementById('result-area');
 const legendArea = document.getElementById('legend-area');
-const emptyState = document.getElementById('empty-state');
 
 inp.addEventListener('input', () => {
   inp.value = inp.value.replace(/[^0-9]/g,'');
@@ -283,7 +280,6 @@ btn.addEventListener('click', search);
 async function search() {
   const raw = inp.value.trim();
   if (!raw) return;
-  emptyState.style.display = 'none';
   const ci = normalizeCI(raw);
   if (DB[ci]) { renderResult(ci, DB[ci], false); renderLegend(); return; }
   resultArea.innerHTML = '<div class="loading">&#9658; AIで解析中...</div>';
